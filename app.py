@@ -13,7 +13,7 @@ encoder = saved_model["encoder"]
 # Page
 # -----------------------------
 st.set_page_config(
-    page_title="FraudGuard AI",
+    page_title="FraudGuard",
     page_icon="🛡️",
     layout="wide"
 )
