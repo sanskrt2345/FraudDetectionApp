@@ -1,14 +1,15 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.preprocessing import LabelEncoder
 import joblib
 
 print("Loading dataset...")
 
-# Load only required columns and first 200,000 rows
 data = pd.read_csv(
     "fraud_data.csv",
     usecols=[
+        "type",
         "amount",
         "oldbalanceOrg",
         "newbalanceOrig",
@@ -16,11 +17,10 @@ data = pd.read_csv(
         "newbalanceDest",
         "isFraud"
     ],
-    nrows=200000,
-    dtype=str
+    nrows=500000
 )
 
-print("Dataset loaded successfully!")
+print("Dataset loaded!")
 
 # Convert numeric columns
 numeric_columns = [
@@ -28,22 +28,27 @@ numeric_columns = [
     "oldbalanceOrg",
     "newbalanceOrig",
     "oldbalanceDest",
-    "newbalanceDest",
-    "isFraud"
+    "newbalanceDest"
 ]
 
 for column in numeric_columns:
     data[column] = pd.to_numeric(data[column], errors="coerce")
 
-# Remove invalid rows
+data["isFraud"] = pd.to_numeric(
+    data["isFraud"],
+    errors="coerce"
+)
+
 data = data.dropna()
 
-print("Data prepared successfully!")
-print("Total rows:", len(data))
+# Convert transaction type to numbers
+encoder = LabelEncoder()
+data["type_encoded"] = encoder.fit_transform(data["type"])
 
 # Features
 X = data[
     [
+        "type_encoded",
         "amount",
         "oldbalanceOrg",
         "newbalanceOrig",
@@ -55,10 +60,10 @@ X = data[
 # Target
 y = data["isFraud"].astype(int)
 
+print("Total transactions:", len(data))
 print("Fraud transactions:", y.sum())
-print("Normal transactions:", (y == 0).sum())
 
-# Split data
+# Split
 X_train, X_test, y_train, y_test = train_test_split(
     X,
     y,
@@ -69,7 +74,6 @@ X_train, X_test, y_train, y_test = train_test_split(
 
 print("Training model...")
 
-# Random Forest
 model = RandomForestClassifier(
     n_estimators=100,
     random_state=42,
@@ -78,8 +82,14 @@ model = RandomForestClassifier(
 
 model.fit(X_train, y_train)
 
-# Save model
-joblib.dump(model, "model.pkl")
+# Save model + encoder
+joblib.dump(
+    {
+        "model": model,
+        "encoder": encoder
+    },
+    "model.pkl"
+)
 
 print("Model trained successfully!")
 print("Model saved as model.pkl")
