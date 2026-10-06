@@ -14,7 +14,6 @@ encoder = saved_model["encoder"]
 # -----------------------------
 st.set_page_config(
     page_title="FraudGuard",
-    page_icon="🛡️",
     layout="wide"
 )
 
